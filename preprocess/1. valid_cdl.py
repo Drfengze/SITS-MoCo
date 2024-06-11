@@ -1,3 +1,5 @@
+## This script is used to generate the valid CDL map based on the confidence score.
+# availble for 2008-2017
 import rasterio
 import numpy as np
 import pandas as pd

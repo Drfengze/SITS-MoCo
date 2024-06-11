@@ -29,22 +29,22 @@ classname = cmapping["classname"].unique()
 nclasses = len(classes)
 
 
-def getWeight(x):
-    score = np.ones(x.shape[0])
-    score = np.minimum(score, (x[:, 0] / 10000 - 0.1) / 0.4)  # blue
-    score = np.minimum(score, (x[:, [0, 1, 2]].sum(1) / 10000 - 0.2) / 0.6)  # rgb
-    cloud = score * 100 > 20  # todo
+# def getWeight(x):
+#     score = np.ones(x.shape[0])
+#     score = np.minimum(score, (x[:, 0] / 10000 - 0.1) / 0.4)  # blue
+#     score = np.minimum(score, (x[:, [0, 1, 2]].sum(1) / 10000 - 0.2) / 0.6)  # rgb
+#     cloud = score * 100 > 20  # todo
 
-    dark = x[:, [6, 8, 9]].sum(1) < 3500  # todo
+#     dark = x[:, [6, 8, 9]].sum(1) < 3500  # todo
 
-    ndvi = (x[:, 6] - x[:, 2]) / (x[:, 6] + x[:, 2] + 1e-8)
-    ndvi[cloud] = -1
-    ndvi[dark] = -1
+#     ndvi = (x[:, 6] - x[:, 2]) / (x[:, 6] + x[:, 2] + 1e-8)
+#     ndvi[cloud] = -1
+#     ndvi[dark] = -1
 
-    weight = np.exp(ndvi)
-    weight /= weight.sum()
+#     weight = np.exp(ndvi)
+#     weight /= weight.sum()
 
-    return weight
+#     return weight
 
 # open labels
 labels = {}
