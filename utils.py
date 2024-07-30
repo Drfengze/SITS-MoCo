@@ -103,27 +103,27 @@ def get_moco_dataloader(datapath, year, batchsize, workers, sequencelength, num,
     return traindataloader, valdataloader, meta
 
 
-def get_bert_dataloader(datapath, year, batchsize, workers, sequencelength, num, rc, seed, useall):
-    pretraindataset = BERTDataset(root=datapath, year=year, sequencelength=sequencelength,
-                                  num=num, randomchoice=rc, seed=seed, useall=useall)
-    num = len(pretraindataset)
-    num_train = int(num * 0.9)
-    indices = list(range(num))
-    np.random.shuffle(indices)
+# def get_bert_dataloader(datapath, year, batchsize, workers, sequencelength, num, rc, seed, useall):
+#     pretraindataset = BERTDataset(root=datapath, year=year, sequencelength=sequencelength,
+#                                   num=num, randomchoice=rc, seed=seed, useall=useall)
+#     num = len(pretraindataset)
+#     num_train = int(num * 0.9)
+#     indices = list(range(num))
+#     np.random.shuffle(indices)
 
-    train_idx, valid_idx = indices[:num_train], indices[num_train:]
-    train_sampler = SubsetRandomSampler(train_idx)
-    valid_sampler = SubsetRandomSampler(valid_idx)
+#     train_idx, valid_idx = indices[:num_train], indices[num_train:]
+#     train_sampler = SubsetRandomSampler(train_idx)
+#     valid_sampler = SubsetRandomSampler(valid_idx)
 
-    traindataloader = torch.utils.data.DataLoader(pretraindataset, batch_size=batchsize, sampler=train_sampler,
-                                                  num_workers=workers, pin_memory=True, drop_last=True)
-    valdataloader = torch.utils.data.DataLoader(pretraindataset, batch_size=batchsize, sampler=valid_sampler,
-                                                num_workers=workers, drop_last=True)
-    meta = dict(
-        ndims=10,
-    )
+#     traindataloader = torch.utils.data.DataLoader(pretraindataset, batch_size=batchsize, sampler=train_sampler,
+#                                                   num_workers=workers, pin_memory=True, drop_last=True)
+#     valdataloader = torch.utils.data.DataLoader(pretraindataset, batch_size=batchsize, sampler=valid_sampler,
+#                                                 num_workers=workers, drop_last=True)
+#     meta = dict(
+#         ndims=10,
+#     )
 
-    return traindataloader, valdataloader, meta
+#     return traindataloader, valdataloader, meta
 
 
 # -------------------------- #

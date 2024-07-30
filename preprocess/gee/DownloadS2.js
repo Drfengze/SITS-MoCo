@@ -3,13 +3,11 @@
 // ----------------------------------- //
 var years = [2019, 2020, 2021];
 var field_name = 'Adams';  // Update this to process other counties as well
-var countyNames = ['Garfield', 'Adams', 'Randolph', 'Harvey', 'Coahoma', 'Haskell'];
-var stateNames = ['Washington', 'North Dakota', 'Indiana', 'Kansas', 'Mississippi', 'Texas'];
+county_names = ['Garfield', 'Adams', 'Harvey', 'Haskell', 'Minidoka', 'Jerome', 'Cassia']
+stateNames = ['Washington', 'North Dakota', 'Kansas', 'Texas', 'Idaho', 'Idaho', 'Idaho']
+stateFipsCodes = {'Washington': '53', 'North Dakota': '38', 'Kansas': '20', 'Texas': '48', 'Idaho': '16'}
 var bandnames = ['QA60', 'aerosol', 'blue', 'green', 'red','red1','red2','red3','nir','red4','h2o', 'swir1', 'swir2'];
 var bandnames_ex = ['blue', 'green', 'red', 'red1', 'red2', 'red3', 'nir', 'red4', 'swir1', 'swir2'];
-var num_dict_2022 = {
-  Adams: 112,
-};
 
 // Load the TIGER/USCensus dataset
 var counties = ee.FeatureCollection("TIGER/2018/Counties");
@@ -22,15 +20,6 @@ function getCounty(state, county) {
   ));
 }
 
-// Convert state names to FIPS codes
-var stateFipsCodes = {
-  'Washington': '53',
-  'North Dakota': '38',
-  'Indiana': '18',
-  'Kansas': '20',
-  'Mississippi': '28',
-  'Texas': '48'
-};
 
 // Function to process each site for each year
 function processSite(county, state, years) {

@@ -4,6 +4,7 @@ var counties = ee.FeatureCollection("TIGER/2018/Counties");
 // Define the counties and states
 var countyNames = ['Garfield', 'Adams', 'Randolph', 'Harvey', 'Coahoma', 'Haskell'];
 var stateNames = ['Washington', 'North Dakota', 'Indiana', 'Kansas', 'Mississippi', 'Texas'];
+var stateFipsCodes = ['53', '38', '18', '20', '28', '48'];
 
 // Function to get county features
 function getCounty(state, county) {
