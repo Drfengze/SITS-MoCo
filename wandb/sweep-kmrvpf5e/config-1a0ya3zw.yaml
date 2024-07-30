@@ -1,0 +1,12 @@
+wandb_version: 1
+
+batch_size:
+  value: 491
+d_model:
+  value: 3
+epochs:
+  value: 195
+learning_rate:
+  value: 0.002462041526990826
+nhead:
+  value: 2

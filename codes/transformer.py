@@ -1,19 +1,33 @@
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
+import os
+import sys
 
 import torch.nn as nn
 import torch.optim as optim
-import matplotlib.pyplot as plt
-import os
-import sys
+
 os.chdir(sys.path[0])
 
-# Attention Layer
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+# Position Encoding
+def get_sinusoid_encoding_table(positions, d_hid, T=1000):
+    if isinstance(positions, int):
+        positions = list(range(positions))
 
+    def cal_angle(position, hid_idx):
+        return position / np.power(T, 2 * (hid_idx // 2) / d_hid)
+
+    def get_posi_angle_vec(position):
+        return [cal_angle(position, hid_j) for hid_j in range(d_hid)]
+
+    sinusoid_table = np.array([get_posi_angle_vec(pos_i) for pos_i in positions])
+    sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # dim 2i
+    sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # dim 2i+1
+
+    if torch.cuda.is_available():
+        return torch.FloatTensor(sinusoid_table).to('cuda')
+    else:
+        return torch.FloatTensor(sinusoid_table)
 class MultiHeadFeatureSelfAttention(nn.Module):
     def __init__(self, d_model, nhead, num_features_to_use):
         super().__init__()
@@ -126,7 +140,7 @@ class EncoderDecoderModel(nn.Module):
         super(EncoderDecoderModel, self).__init__()
         self.encoder = CustomEncoder(input_dim, d_model, nhead, num_encoder_layers, dim_feedforward, max_seq_len)
         self.decoder = nn.TransformerDecoder(
-            nn.TransformerDecoderLayer(d_model, nhead, dim_feedforward, dropout=0.1),
+            nn.TransformerDecoderLayer(d_model, nhead, dim_feedforward, dropout=0),
             num_decoder_layers
         )
         self.output_proj = nn.Linear(d_model, 1)
@@ -139,8 +153,7 @@ class EncoderDecoderModel(nn.Module):
     
 # Model Training
 def train_model(model, train_loader, val_loader, num_epochs=10, learning_rate=0.014):
-    # use apple silicon GPU if available
-    
+    # use apple silicon GPU if available    
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     

@@ -5,16 +5,19 @@ import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 from transformer import *  
+import matplotlib.pyplot as plt
+
 # 初始化 wandb
-wandb.init(project="transformer", name="toy_transformer_with_cumsum")
+wandb.init(project="transformer", name="_init_lower_triangular_weights")
 # 数据生成和准备 (使用你原来的代码)
 n = 365
 # wandb 配置
 config = wandb.config
-config.learning_rate = 0.005
+config.learning_rate = 0.001
 config.epochs = 100
-config.batch_size = 256
-
+config.batch_size = 128
+config.nhead = 1
+config.d_model = 4
 # load the data
 train_data = torch.load('toy_data/train_data.pth')
 val_data = torch.load('toy_data/val_data.pth')
@@ -24,10 +27,8 @@ val_loader = DataLoader(val_data, batch_size=config.batch_size)
 
 # 模型定义
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-d_model = 4
-nhead = 1
 
-model = EncoderDecoderModel(input_dim=4, d_model=d_model, nhead=nhead, num_encoder_layers=1, dim_feedforward=4, max_seq_len=1000, num_decoder_layers=1)
+model = EncoderDecoderModel(input_dim=4, d_model=config.d_model, nhead=config.nhead, num_encoder_layers=1, dim_feedforward=4, max_seq_len=1000, num_decoder_layers=1)
 model.to(device)
 
 # 优化器和损失函数
@@ -84,26 +85,26 @@ test_input, test_ground_truth = test_data.tensors
 with torch.no_grad():
     model_output = trained_model(test_input.to(device))
 
+
 # 可视化结果
-plt.figure(figsize=(15, 20))
-
-plt.subplot(5, 1, 1)
+plt.figure(figsize=(5, 10))
+#获取随机整数n
+n = np.random.randint(0, config.batch_size )
+plt.subplot(3, 1, 1)
 plt.title("Smooth Multi-peak Signal (Signal 1)")
-plt.plot(test_input[5, :, 0].cpu().numpy())
+plt.plot(test_input[n, :, 0].numpy())
 
-plt.subplot(5, 1, 2)
+plt.subplot(3, 1, 2)
 plt.title("Random Signal (Signal 2)")
-plt.plot(test_input[5, :, 2].cpu().numpy())
+plt.plot(test_input[n, :, 2].numpy())
 
-plt.subplot(5, 1, 3)
+plt.subplot(3, 1, 3)
 plt.title("Ground Truth")
-plt.plot(test_ground_truth[5, :, 0].cpu().numpy())
+plt.plot(test_ground_truth[n, :, 0].numpy())
 
-plt.subplot(5, 1, 4)
-plt.title("Model Output")
-plt.plot(model_output[5, :, 0].cpu().numpy())
-
+plt.plot(model_output[n, :, 0].cpu().numpy().transpose())
 plt.tight_layout()
+
 wandb.log({"results": wandb.Image(plt)})
 
 # 结束 wandb 运行
