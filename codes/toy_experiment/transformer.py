@@ -93,14 +93,13 @@ class MultiHeadFeatureSelfAttention(nn.Module):
 
 # Transformer Encoder
 class CustomEncoder(nn.Module):
-    def __init__(self, input_dim=4, d_model=4, nhead=1, num_layers=1, dim_feedforward=8, max_seq_len=1000, dropout=0):
+    def __init__(self, input_dim=4, d_model=4, nhead=1, num_layers=1, dim_feedforward=8, max_seq_len=1000, dropout=0,num_features_to_use=2):
         super(CustomEncoder, self).__init__()
         self.embedding = nn.Linear(input_dim, d_model)
-        self.pos_embedding = nn.Parameter(get_sinusoid_encoding_table(max_seq_len, d_model))
+        self.pos_embedding = nn.Parameter(get_sinusoid_encoding_table(max_seq_len, input_dim))
         self.mha = nn.MultiheadAttention(d_model, nhead)
         self.encoder_layers1 = nn.ModuleList([
-            MultiHeadFeatureSelfAttention(d_model, nhead,num_features_to_use=2)
-            for _ in range(num_layers)
+            MultiHeadFeatureSelfAttention(d_model, nhead,num_features_to_use=num_features_to_use)
         ])
         self.encoder_layers2 = nn.ModuleList([
             MultiHeadFeatureSelfAttention(d_model, nhead,num_features_to_use=d_model)
@@ -118,7 +117,7 @@ class CustomEncoder(nn.Module):
     def forward(self, src):
         src = src.transpose(0, 1)  # Change to (seq_len, batch_size, input_dim)
         embedded = self.embedding(src)
-        seq_len = embedded.size(0)
+        seq_len = src.size(0)
         src2 = src + self.pos_embedding[:seq_len, :].unsqueeze(1)
         for layer in self.encoder_layers1:
             src2 = layer(src2)        
@@ -128,28 +127,46 @@ class CustomEncoder(nn.Module):
         src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
         # for layer in self.encoder_layers2:
         #     src2 = layer(src2)
-        src2 = torch.cumsum(src2, dim=0)      
-        src = src + self.dropout2(src2)
-        
+        src2 = torch.cumsum(src2, dim=0)  
+        src = src + self.dropout2(src2)        
         # src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
         src = self.norm2(src)
-        return src  # Change back to (batch_size, seq_len, 1)
+        for layer in self.encoder_layers2:
+            src2 = layer(src)
+        src = src + self.dropout1(src2)
+        src = self.norm2(src)
+        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
+        src = src + self.dropout2(src2)
+        src = self.norm2(src) 
+        return src  #(seq_len, batch_size, input_dim)
     
 class EncoderDecoderModel(nn.Module):
-    def __init__(self, input_dim, d_model, nhead, num_encoder_layers, num_decoder_layers, dim_feedforward, max_seq_len):
+    def __init__(self, input_dim, d_model, nhead, num_encoder_layers, num_decoder_layers, dim_feedforward, max_seq_len,num_classes=10):
         super(EncoderDecoderModel, self).__init__()
         self.encoder = CustomEncoder(input_dim, d_model, nhead, num_encoder_layers, dim_feedforward, max_seq_len)
-        self.decoder = nn.TransformerDecoder(
-            nn.TransformerDecoderLayer(d_model, nhead, dim_feedforward, dropout=0),
-            num_decoder_layers
-        )
+        self.global_pool = nn.AdaptiveAvgPool1d(1)  # 全局平均池化
+        # self.decoder = nn.TransformerDecoder(
+        #     nn.TransformerDecoderLayer(d_model, nhead, dim_feedforward, dropout=0),
+        #     num_decoder_layers
+        # )
+        decoder_structure = [d_model, 64, 32, num_classes]
+        layers = []
+        for i in range(len(decoder_structure) - 1):
+            layers.append(nn.Linear(decoder_structure[i], decoder_structure[i + 1]))
+            if i < (len(decoder_structure) - 2):
+                layers.extend([
+                    nn.BatchNorm1d(decoder_structure[i + 1]),
+                    nn.ReLU()
+                ])
+        self.decoder = nn.Sequential(*layers)
         self.output_proj = nn.Linear(d_model, 1)
 
     def forward(self, src):
         encoder_output = self.encoder(src)
         # encoder_output = torch.cumsum(encoder_output, dim=0)
-        decoder_output = self.decoder(encoder_output, encoder_output)
-        return self.output_proj(decoder_output).transpose(0, 1)
+        # decoder_output = encoder_output#self.decoder(encoder_output, encoder_output)
+        pooled = self.global_pool(encoder_output.permute(1, 2, 0)).squeeze(-1) # 全局平均池化, shape: (batch_size, d_model)
+        return self.decoder(pooled)
     
 # Model Training
 def train_model(model, train_loader, val_loader, num_epochs=10, learning_rate=0.014):

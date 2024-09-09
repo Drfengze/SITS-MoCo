@@ -1,0 +1,14 @@
+wandb_version: 1
+
+batch_size:
+  value: 456
+d_model:
+  value: 4
+dim_feedforward:
+  value: 6
+epochs:
+  value: 326
+learning_rate:
+  value: 0.009550940017638695
+nhead:
+  value: 1

@@ -8,16 +8,18 @@ from transformer import *
 import matplotlib.pyplot as plt
 
 # 初始化 wandb
-wandb.init(project="transformer", name="_init_lower_triangular_weights")
+wandb.init(project="transformer",name="cope_transformer")
 # 数据生成和准备 (使用你原来的代码)
 n = 365
 # wandb 配置
 config = wandb.config
-config.learning_rate = 0.001
-config.epochs = 100
-config.batch_size = 128
+config.learning_rate = 0.008
+config.epochs = 200
+config.batch_size = 360
 config.nhead = 1
 config.d_model = 4
+config.num_encoder_layers = 1
+config.dim_feedforward = 8
 # load the data
 train_data = torch.load('toy_data/train_data.pth')
 val_data = torch.load('toy_data/val_data.pth')
@@ -28,7 +30,7 @@ val_loader = DataLoader(val_data, batch_size=config.batch_size)
 # 模型定义
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = EncoderDecoderModel(input_dim=4, d_model=config.d_model, nhead=config.nhead, num_encoder_layers=1, dim_feedforward=4, max_seq_len=1000, num_decoder_layers=1)
+model = EncoderDecoderModel(input_dim=4, d_model=config.d_model, nhead=config.nhead, num_encoder_layers=config.num_encoder_layers, dim_feedforward=config.dim_feedforward, max_seq_len=1000, num_decoder_layers=1)
 model.to(device)
 
 # 优化器和损失函数

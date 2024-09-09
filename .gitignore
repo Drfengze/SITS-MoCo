@@ -172,4 +172,4 @@ main_bert.py
 data/
 codes/toy_data/
 codes/trained_model.pth
-codes/wandb/
+codes/toy_experiment/wandb/

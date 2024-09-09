@@ -2,7 +2,9 @@
 import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader
-
+import os
+import sys
+os.chdir(sys.path[0])
 def improved_matrix_independent_accumulation(signal1, signal2, threshold=0.1):
     n = len(signal1)
     
@@ -59,6 +61,12 @@ for i in range(1, batch_size):
 signal1 = torch.tensor(np.stack(signal1_lst).astype('float32'))
 signal2 = torch.tensor(np.stack(signal2_lst).astype('float32'))
 ground_truth = torch.tensor(np.stack(ground_truth_lst).astype('float32'))
+
+# Ensure signals are 3D
+if signal1.dim() == 2:
+    signal1 = signal1.unsqueeze(-1)
+if signal2.dim() == 2:
+    signal2 = signal2.unsqueeze(-1)
 
 # 数据集分割
 train_size = int(0.7 * batch_size)
