@@ -173,3 +173,5 @@ data/
 codes/toy_data/
 codes/trained_model.pth
 codes/toy_experiment/wandb/
+codes/toy_experiment/toy_data/
+wandb/

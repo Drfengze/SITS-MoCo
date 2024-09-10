@@ -68,7 +68,7 @@ class CustomEncoder(nn.Module):
 
     def forward(self, src):
         src = src.transpose(0, 1)  # Change to (seq_len, batch_size, input_dim)
-        src = self.embedding(src)
+        # src = self.embedding(src)
         for layer in self.encoder_layers:
             src2 = layer(src)
             src = src + self.dropout1(src2)
@@ -76,10 +76,10 @@ class CustomEncoder(nn.Module):
             src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
             src = src + self.dropout2(src2)
             src = self.norm2(src)
-        return src
+        return src # shape: (seq_len, batch_size, d_model)
 
 class EncoderDecoderModel(nn.Module):
-    def __init__(self, input_dim, d_model, nhead, num_encoder_layers, num_decoder_layers, dim_feedforward, num_classes=10):
+    def __init__(self, input_dim, d_model, nhead, num_encoder_layers, dim_feedforward, num_classes=10):
         super(EncoderDecoderModel, self).__init__()
         self.encoder = CustomEncoder(input_dim, d_model, nhead, num_encoder_layers, dim_feedforward)
         self.global_pool = nn.AdaptiveAvgPool1d(1)
@@ -90,14 +90,15 @@ class EncoderDecoderModel(nn.Module):
             if i < (len(decoder_structure) - 2):
                 layers.extend([
                     nn.BatchNorm1d(decoder_structure[i + 1]),
-                    nn.ReLU()
+                    # nn.ReLU()
                 ])
         self.decoder = nn.Sequential(*layers)
-
+        self.output_proj = nn.Linear(d_model, 1)
     def forward(self, src):
         encoder_output = self.encoder(src)
-        pooled = self.global_pool(encoder_output.permute(1, 2, 0)).squeeze(-1)
-        return self.decoder(pooled)
+        # pooled = self.global_pool(encoder_output.permute(1, 2, 0)).squeeze(-1)
+        # decoder_output = self.decoder(encoder_output.permute(1, 2, 0))
+        return self.output_proj(encoder_output).transpose(0, 1)
 
 # Model Training function remains the same
 def train_model(model, train_loader, val_loader, num_epochs=10, learning_rate=0.014):
